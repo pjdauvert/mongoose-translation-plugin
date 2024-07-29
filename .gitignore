@@ -1,0 +1,12 @@
+# IDE files
+.vscode/
+.idea/
+
+# exclude temporary files
+node_modules/
+dist
+coverage/
+.env
+
+.eslintcache
+**/*buildinfo
