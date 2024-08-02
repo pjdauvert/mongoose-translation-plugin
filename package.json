@@ -1,0 +1,50 @@
+{
+  "name": "mongoose-translation-plugin",
+  "version": "1.0.0",
+  "description": "Auto-translation plugin for mongoose models",
+  "type": "module",
+  "keywords": ["mongoose", "plugin", "translation", "auto-translation"],
+  "private": false,
+  "main": "./dist/index.js",
+  "engines": {
+    "node": ">=16.0.0",
+    "npm": ">=8.0.0"
+  },
+  "tsup": {
+    "entry": ["src/index.ts"],
+    "splitting": false,
+    "sourcemap": true,
+    "clean": true
+  },
+  "scripts": {
+    "build:watch": "tsc -w -p tsconfig.build.json",
+    "biome": "biome check",
+    "biome:fix": "biome check --write",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "clean": "rimraf coverage dist tmp",
+    "build": "tsup --dts --tsconfig tsconfig.build.json"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^1.8.3",
+    "@types/jest": "^29.5.12",
+    "@types/object-path": "^0.11.1",
+    "dotenv": "^16.4.5",
+    "dotenv-cli": "^7.1.0",
+    "jest": "^29.7.0",
+    "jest-extended": "^4.0.2",
+    "mongodb-memory-server": "^10.0.0",
+    "rimraf": "^6.0.1",
+    "ts-jest": "^29.2.4",
+    "ts-node": "^10.9.2",
+    "tsup": "^8.2.3",
+    "typescript": "^5.5.4"
+  },
+  "dependencies": {
+    "object-path": "^0.11.8"
+  },
+  "peerDependencies": {
+    "@google-cloud/translate": "^8.0.2",
+    "mongoose": "^6.6.6"
+  }
+}
