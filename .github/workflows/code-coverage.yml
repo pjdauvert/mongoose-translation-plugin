@@ -15,6 +15,11 @@ jobs:
         with:
           fetch-depth: $(${{ github.event.pull_request.commits }} + 1) # fetch all commits in the PR
 
+      - name: Install node
+        uses: actions/setup-node@v4
+        with:
+          node-version: lts/Iron
+
       - name: Install dependencies
         run: npm install
 
