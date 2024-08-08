@@ -6,7 +6,9 @@ translation provider such as [Google Translate](https://cloud.google.com/transla
 It is a simple plugin that allows you to translate your Mongoose models by simply adding `translatable` to any attribute
 of a mongoose Schema and store overrides making contents searchable in any translated language.
 
+[![codecov](https://codecov.io/github/pjdauvert/mongoose-translation-plugin/graph/badge.svg?token=S9U050U1VD)](https://codecov.io/github/pjdauvert/mongoose-translation-plugin)
 [![Contributor Covenant](https://img.shields.io/badge/Contributor%20Covenant-2.1-4baaaa.svg)](CODE_OF_CONDUCT.md)
+[![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](LICENSE.md)
 
 ## How it works
 The plugin will automatically create a new attribute `translation` for the translations and will handle the translation
@@ -142,7 +144,5 @@ but it could be implemented in the future.
 Please respect the [Code of Conduct](CODE_OF_CONDUCT.md) to submit your improvement change requests. 
 
 ## License
-
-[![AGPLv3](https://www.gnu.org/graphics/agplv3-with-text-162x68.png)](LICENSE.md)
 
 Mongoose Translation Plugin is licensed under the [AGPL license](LICENSE.md).

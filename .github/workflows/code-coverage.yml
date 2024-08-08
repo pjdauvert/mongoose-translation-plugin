@@ -1,0 +1,27 @@
+# Based on https://www.freecodecamp.org/news/how-to-generate-code-coverage-report-with-codecov-and-github-actions/
+
+name: Running Code Coverage
+
+on: [push, pull_request]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: $(${{ github.event.pull_request.commits }} + 1) # fetch all commits in the PR
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Run tests
+        run: npm run test:coverage
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v4.0.1
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}

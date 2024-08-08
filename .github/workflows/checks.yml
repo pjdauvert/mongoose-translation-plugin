@@ -1,0 +1,38 @@
+name: Checks
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, assigned]
+  push:
+jobs:
+  lint:
+    name: Biome checks
+    # https://docs.github.com/en/actions/using-github-hosted-runners/using-larger-runners
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: $(${{ github.event.pull_request.commits }} + 1) # fetch all commits in the PR
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Run Biome checks
+        run: npm run biome
+
+  test:
+    timeout-minutes: 10
+    name: Jest tests
+    # https://docs.github.com/en/actions/using-github-hosted-runners/using-larger-runners
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: $(${{ github.event.pull_request.commits }} + 1) # fetch all commits in the PR
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Run Jest tests
+        run: npm test

@@ -17,10 +17,11 @@
     "clean": true
   },
   "scripts": {
-    "build:watch": "tsc -w -p tsconfig.build.json",
+    "build:watch": "tsc -w  -p tsconfig.build.json",
     "biome": "biome check",
     "biome:fix": "biome check --write",
     "test": "jest",
+    "test:coverage": "jest --coverage",
     "test:watch": "jest --watch",
     "clean": "rimraf coverage dist tmp",
     "build": "tsup --dts --tsconfig tsconfig.build.json"
