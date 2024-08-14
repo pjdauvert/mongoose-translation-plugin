@@ -1,7 +1,6 @@
 name: Checks (Biome & Jest)
 
 on:
-  push:
   pull_request:
     branches:
       - main
