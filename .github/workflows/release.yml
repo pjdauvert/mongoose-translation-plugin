@@ -21,7 +21,7 @@ jobs:
         run: pnpm install --save-dev @semantic-release/changelog @semantic-release/git
 
       - name: Run checks
-        run: npm run biome
+        run: npm run biome:fix
 
       - name: Run tests
         run: npm run test:coverage
