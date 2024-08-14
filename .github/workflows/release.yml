@@ -1,0 +1,42 @@
+name: Release
+# inspired by https://dev.to/kouts/automated-versioning-and-package-publishing-using-github-actions-and-semantic-release-1kce
+
+on:
+  push:
+    branches: [main, beta]
+
+jobs:
+  release:
+    name: Release
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Install dependencies
+        uses: ./.github/actions/install-dependencies
+
+      - name: Install semantic-release extra plugins
+        run: pnpm install --save-dev @semantic-release/changelog @semantic-release/git
+
+      - name: Run checks
+        run: npm run biome
+
+      - name: Run tests
+        run: npm run test:coverage
+
+      - name: Run build
+        run: npm run build
+
+      - name: Release
+        env:
+          HUSKY: 0
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: npx semantic-release
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v4.0.1
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}

@@ -1,14 +1,14 @@
 {
   "name": "mongoose-translation-plugin",
-  "version": "1.0.0",
+  "version": "0.0.0-semantic-release",
   "description": "Auto-translation plugin for mongoose models",
   "type": "module",
   "keywords": ["mongoose", "plugin", "translation", "auto-translation"],
   "private": false,
   "main": "./dist/index.js",
   "engines": {
-    "node": ">=16.0.0",
-    "npm": ">=8.0.0"
+    "node": ">=20.0.0",
+    "npm": ">=10.0.0"
   },
   "tsup": {
     "entry": ["src/index.ts"],
@@ -16,8 +16,40 @@
     "sourcemap": true,
     "clean": true
   },
+  "commitlint": {
+    "extends": ["@commitlint/config-conventional"],
+    "helpUrl": "https://github.com/conventional-changelog/commitlint/#what-is-commitlint"
+  },
+  "release": {
+    "branches": [
+      "main",
+      {
+        "name": "beta",
+        "prerelease": true
+      }
+    ],
+    "plugins": [
+      "@semantic-release/commit-analyzer",
+      "@semantic-release/release-notes-generator",
+      [
+        "@semantic-release/changelog",
+        {
+          "changelogFile": "CHANGELOG.md"
+        }
+      ],
+      "@semantic-release/npm",
+      "@semantic-release/github",
+      [
+        "@semantic-release/git",
+        {
+          "assets": ["CHANGELOG.md", "dist/**"],
+          "message": "chore(release): set `package.json` to ${nextRelease.version} [skip ci]\n\n${nextRelease.notes}"
+        }
+      ]
+    ]
+  },
   "scripts": {
-    "build:watch": "tsc -w  -p tsconfig.build.json",
+    "prepare": "husky",
     "biome": "biome check",
     "biome:fix": "biome check --write",
     "test": "jest",
@@ -28,10 +60,13 @@
   },
   "devDependencies": {
     "@biomejs/biome": "^1.8.3",
+    "@commitlint/cli": "^19.4.0",
+    "@commitlint/config-conventional": "^19.2.2",
     "@types/jest": "^29.5.12",
     "@types/object-path": "^0.11.1",
     "dotenv": "^16.4.5",
     "dotenv-cli": "^7.1.0",
+    "husky": "^9.1.4",
     "jest": "^29.7.0",
     "jest-extended": "^4.0.2",
     "mongodb-memory-server": "^10.0.0",
