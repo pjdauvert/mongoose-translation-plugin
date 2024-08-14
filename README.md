@@ -120,7 +120,7 @@ The `documentTranslation` is a plain object as follows:
   "nativeLanguage": "en",
   "supportedLanguages": ["en", "fr"],
   "language": "fr",
-  "sourceHash": "...", // The hash of all the translatable fields
+  "sourceHash": "<The hash of all the translatable fields>",
   "autoTranslated": true,
   "translatableStringField": "Bonjour",
   "nonTranslatableStringField": "World",
