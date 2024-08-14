@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/naming-convention */
-/* eslint-disable no-param-reassign */
 import { Schema, type SchemaDefinition } from 'mongoose';
 
 import type {
@@ -96,7 +94,6 @@ export function translationPlugin<T>(schema: Schema, opts: TranslationOptions): 
         translation = { ...translationMeta, ...translationOverrides, autoTranslated: true };
         await _this.updateOrReplaceTranslation(translation);
       } catch (err) {
-        // eslint-disable-next-line no-console
         console.error(`An error occured while auto-translating an entity: ${err instanceof Error ? err.message : err}`);
       }
     return translation;
@@ -123,7 +120,6 @@ export function translationPlugin<T>(schema: Schema, opts: TranslationOptions): 
       autoTranslated: entityTranslation?.autoTranslated || false
     };
 
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars, no-unused-vars
     const { translation, _id, __v, ...entityToTranslate } = _this.toObject();
 
     // in case no translation is returned, the native entity is returned as failsafe
