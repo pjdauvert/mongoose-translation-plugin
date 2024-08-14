@@ -61,7 +61,6 @@ function generateSchemaRecursive(pathnames: string[], tree: Tree, translationSch
     const nestedTranslationSchema = existingSchema || { _id: false };
     if (isLeaf) {
       // the array encloses simple values
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars, no-unused-vars
       const { translatable, required, ...options } = branch;
       Object.assign(nestedTranslationSchema, options);
     } else {
@@ -80,7 +79,6 @@ function generateSchemaRecursive(pathnames: string[], tree: Tree, translationSch
   // current path is a translatable value
   else {
     // add all schema options to this path except required and translatable
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars, no-unused-vars
     const { translatable, required, ...options } = treePath as Tree;
     Object.assign(translationSchema, { [pathName]: options });
   }
@@ -120,7 +118,6 @@ export function buildTranslationSchema(schema: Schema, schemaFields: SchemaDefin
   try {
     pathsToTranslate.reduce(addSchemaForPath(schema), translationSchema);
   } catch (error) {
-    // eslint-disable-next-line no-console
     console.error('The translation schema could not be build recursively:', error);
   }
   return translationSchema; // recursive sub-schema definition
