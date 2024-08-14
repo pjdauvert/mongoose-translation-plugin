@@ -5,6 +5,7 @@
   "type": "module",
   "keywords": ["mongoose", "plugin", "translation", "auto-translation"],
   "private": false,
+  "license": "AGPL-3.0",
   "main": "./dist/index.js",
   "engines": {
     "node": ">=20.0.0",
