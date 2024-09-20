@@ -67,6 +67,7 @@
     "test:watch": "jest --watch",
     "clean": "rimraf coverage dist tmp",
     "build": "tsup --dts --tsconfig tsconfig.build.json",
+    "type-check": "tsc --noEmit",
     "check-exports": "attw --pack ."
   },
   "devDependencies": {
