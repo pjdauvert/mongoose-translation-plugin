@@ -9,7 +9,12 @@ updates:
 
   - package-ecosystem: 'npm'
     directory: '/'
-
+    groups:
+      production-dependencies:
+        dependency-type: "production"
+      development-dependencies:
+        dependency-type: "development"
+        
     commit-message:
       prefix: 'chore(deps): update dependency version'
     schedule:
