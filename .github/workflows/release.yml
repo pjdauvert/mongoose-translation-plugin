@@ -13,6 +13,8 @@ jobs:
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
+        with:
+          persist-credentials: false
 
       - name: Install dependencies
         uses: ./.github/actions/install-dependencies
@@ -29,10 +31,13 @@ jobs:
       - name: Run build
         run: npm run build
 
+      - name: Check exports
+        run: npm run check-exports
+
       - name: Release
         env:
           HUSKY: 0
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.CI_GITHUB_TOKEN }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: npx semantic-release
 

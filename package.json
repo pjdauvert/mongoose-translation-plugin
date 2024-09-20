@@ -7,6 +7,14 @@
   "private": false,
   "license": "AGPL-3.0",
   "main": "./dist/index.js",
+  "exports": {
+    "./package.json": "./package.json",
+    ".": {
+      "import": "./dist/index.js",
+      "default": "./dist/index.cjs"
+    }
+  },
+  "files": ["dist", "package.json"],
   "engines": {
     "node": ">=20.0.0",
     "npm": ">=10.0.0"
@@ -15,6 +23,7 @@
     "entry": ["src/index.ts"],
     "splitting": false,
     "sourcemap": true,
+    "format": ["cjs", "esm"],
     "clean": true
   },
   "commitlint": {
@@ -58,13 +67,15 @@
     "test:watch": "jest --watch",
     "clean": "rimraf coverage dist tmp",
     "build": "tsup --dts --tsconfig tsconfig.build.json",
-    "type-check": "tsc --noEmit"
+    "type-check": "tsc --noEmit",
+    "check-exports": "attw --pack ."
   },
   "devDependencies": {
-    "@biomejs/biome": "^1.8.3",
+    "@arethetypeswrong/cli": "^0.16.4",
+    "@biomejs/biome": "^1.9.2",
     "@commitlint/cli": "^19.5.0",
-    "@commitlint/config-conventional": "^19.2.2",
-    "@types/jest": "^29.5.12",
+    "@commitlint/config-conventional": "^19.5.0",
+    "@types/jest": "^29.5.13",
     "@types/object-path": "^0.11.1",
     "dotenv": "^16.4.5",
     "dotenv-cli": "^7.1.0",
@@ -73,10 +84,10 @@
     "jest-extended": "^4.0.2",
     "mongodb-memory-server": "^10.0.0",
     "rimraf": "^6.0.1",
-    "ts-jest": "^29.2.4",
+    "ts-jest": "^29.2.5",
     "ts-node": "^10.9.2",
-    "tsup": "^8.2.3",
-    "typescript": "^5.5.4"
+    "tsup": "^8.3.0",
+    "typescript": "^5.6.2"
   },
   "dependencies": {
     "object-path": "^0.11.8"
