@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/brace-style */
 import { createHash } from 'node:crypto';
 import objectPath from 'object-path';
 
@@ -194,7 +193,7 @@ export async function generateAutoTranslation(
 
     Array.from(source.keys()).forEach((key, index) => translationsResult.set(key, autoTranslations[index]));
   } catch (error) {
-    console.log(`Translation failed form ${from} to ${to}`); // eslint-disable-line
+    console.log(`Translation failed form ${from} to ${to}`);
   }
   return translationsResult;
 }
