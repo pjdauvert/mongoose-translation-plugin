@@ -22,11 +22,10 @@ export const clearDatabase = async (): Promise<void> => {
  * For more information about transactions, check: https://www.mongodb.com/docs/manual/core/transactions/
  */
 export const connect = async (testSuiteName: string): Promise<typeof mongoose> => {
-
   const mongoServer = await MongoMemoryServer.create();
   const db = await mongoose.connect(mongoServer.getUri(), {
     directConnection: true,
-    dbName: testSuiteName,
+    dbName: testSuiteName
   });
 
   // Clear all data
@@ -49,4 +48,3 @@ export const closeDatabase = async (db: typeof mongoose): Promise<void> => {
     console.error(err);
   }
 };
-

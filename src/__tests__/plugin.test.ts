@@ -2,8 +2,7 @@ import 'jest-extended';
 
 import mongoose from 'mongoose';
 
-import type { TranslatableDocument, TranslatablePayload,
-  TranslatedPlainObject } from '../mongoose.types';
+import type { TranslatableDocument, TranslatablePayload, TranslatedPlainObject } from '../mongoose.types';
 import { translationPlugin } from '../plugin';
 import { type MongoMemoryServerHelper, clearDatabase, closeDatabase, connect } from './db.setup';
 const Schema = mongoose.Schema;
@@ -96,10 +95,13 @@ describe('Mongoose translation plugin test', () => {
       parent2: IChild[];
     }
 
-    const childSchema = new Schema<IChild>({
-      child: { type: String, translatable: true },
-      childNT: String
-    }, { _id: false });
+    const childSchema = new Schema<IChild>(
+      {
+        child: { type: String, translatable: true },
+        childNT: String
+      },
+      { _id: false }
+    );
 
     const schema = new Schema({
       nonTranslatableField: String,
@@ -161,20 +163,23 @@ describe('Mongoose translation plugin test', () => {
       };
     }
 
-    const childSchema = new Schema<IChild>({
-    childValue: { type: String, translatable: true },
-      childValueNT: String,
-      childList: [
-        {
-          _id: false,
-          childListItem: { type: String, translatable: true },
-          childListItemNT1: String,
-          childListItemNT2: Number,
-          childListItemNT3: Boolean
-        }
-      ],
-      childArray: { type: [String], translatable: true }
-    }, { _id: false });
+    const childSchema = new Schema<IChild>(
+      {
+        childValue: { type: String, translatable: true },
+        childValueNT: String,
+        childList: [
+          {
+            _id: false,
+            childListItem: { type: String, translatable: true },
+            childListItemNT1: String,
+            childListItemNT2: Number,
+            childListItemNT3: Boolean
+          }
+        ],
+        childArray: { type: [String], translatable: true }
+      },
+      { _id: false }
+    );
 
     const schema = new Schema({
       rootNT: String,
@@ -278,15 +283,17 @@ describe('Mongoose translation plugin test', () => {
       value: { type: String, translatable: true }
     });
 
-    schema.plugin(translationPlugin, {
-      translator: translatorMock,
+    const langOptions = {
       languageField: 'langue',
       // translationField: 'traductions', //TODO : this option is not yet implemented
+      defaultLanguage: 'fr',
       hashField: 'hash',
-      defaultLanguage: 'fr'
-    });
+      translator: translatorMock
+    } as const;
 
-    type ISimpleDocument = ISimpleValue & TranslatableDocument<ISimpleValue>;
+    schema.plugin(translationPlugin, langOptions);
+
+    type ISimpleDocument = ISimpleValue & TranslatableDocument<ISimpleValue, typeof langOptions>;
     const SimpleModelOption = mongoose.model<ISimpleDocument>('SimpleModelOption', schema);
 
     await SimpleModelOption.create({
@@ -294,6 +301,7 @@ describe('Mongoose translation plugin test', () => {
     });
 
     const entity = (await SimpleModelOption.findOne({})) as ISimpleDocument;
+
     const translation = await entity.translate('en');
 
     expect(entity.langue).toBe('fr'); //the language field is redefined and set with the proper default
