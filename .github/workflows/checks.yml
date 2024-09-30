@@ -24,3 +24,6 @@ jobs:
 
       - name: Run jest tests
         run: npm run test
+
+      - name: Run type checks
+        run: npm run type-check
