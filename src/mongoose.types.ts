@@ -36,15 +36,12 @@ export interface TranslationOptions {
 }
 
 // Helper type to generate new properties based on options
-type TranslationDocumentOptions<O> = Required<O> extends {
-  languageField: infer L extends string;
-  hashField: infer H extends string;
-}
+type TranslationDocumentOptions<O> = O extends { languageField?: infer L extends string; hashField?: infer H extends string }
   ? { [K in L | H]: string }
   : never;
 
 // methods
-interface BaseTranslatableDocument<T> extends Document {
+type BaseTranslatableDocument<T> = {
   getSupportedLanguages(): string[];
   getExistingTranslationForLocale(locale: string): TranslationDocument<T>;
   updateOrReplaceTranslation(translation: TranslationDocument<T>): Promise<void>;
@@ -53,9 +50,9 @@ interface BaseTranslatableDocument<T> extends Document {
   getTranslation(locale: string): Promise<TranslationDocument<T>>;
   translate(locale: string): Promise<TranslatedPlainObject<T>>;
   translation: [TranslationDocument<T>];
-}
+} & { [K in keyof T]: T[K] } & Document;
 
-export type TranslatableDocument<T> = BaseTranslatableDocument<T> & TranslationDocumentOptions<TranslationOptions>;
+export type TranslatableDocument<T, O = { languageField: 'language'; hashField: 'sourceHash' }> = BaseTranslatableDocument<T> & TranslationDocumentOptions<O>;
 /**
 export type TranslatableModel<T extends Document> = Model<T>;
 
