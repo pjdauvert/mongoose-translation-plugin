@@ -61,7 +61,7 @@ function buildTranslationSchema(schema, schemaFields, pathsToTranslate) {
 }
 
 // src/tools.ts
-import { createHash } from "crypto";
+import { createHash } from "node:crypto";
 import objectPath from "object-path";
 function prefixMapKeys(map, prefix) {
   const result = /* @__PURE__ */ new Map();

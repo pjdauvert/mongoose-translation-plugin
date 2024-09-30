@@ -1,3 +1,10 @@
+## [1.0.3](https://github.com/pjdauvert/mongoose-translation-plugin/compare/v1.0.2...v1.0.3) (2024-09-30)
+
+
+### Bug Fixes
+
+* **document:** typings and inferrence for base document ([fd51898](https://github.com/pjdauvert/mongoose-translation-plugin/commit/fd518988cffe67bbbf57caf5053774d7c21590b0))
+
 ## [1.0.2](https://github.com/pjdauvert/mongoose-translation-plugin/compare/v1.0.1...v1.0.2) (2024-09-20)
 
 
