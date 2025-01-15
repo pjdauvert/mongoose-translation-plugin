@@ -24,7 +24,7 @@
   },
 
   "linter": {
-    "ignore": ["**/dist/**/*"],
+    "ignore": ["**/dist/**/*", "**/coverage/**/*"],
     "enabled": true,
     "rules": { "recommended": true }
   }
