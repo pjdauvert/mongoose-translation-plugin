@@ -2,7 +2,7 @@
   "organizeImports": { "enabled": true },
 
   "formatter": {
-    "ignore": ["**/dist/**/*", "**/.pnpm-store/**/*", "**/coverage/**/*"],
+    "ignore": ["**/dist/**/*", "**/.pnpm-store/**/*", "**/coverage/**/*", "package.json"],
     "enabled": true,
     "indentWidth": 2,
     "lineWidth": 160,

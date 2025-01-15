@@ -3,7 +3,12 @@
   "version": "0.0.0-semantic-release",
   "description": "Auto-translation plugin for mongoose models",
   "type": "module",
-  "keywords": ["mongoose", "plugin", "translation", "auto-translation"],
+  "keywords": [
+    "mongoose",
+    "plugin",
+    "translation",
+    "auto-translation"
+  ],
   "private": false,
   "license": "AGPL-3.0",
   "main": "./dist/index.js",
@@ -14,20 +19,30 @@
       "default": "./dist/index.cjs"
     }
   },
-  "files": ["dist", "package.json"],
+  "files": [
+    "dist",
+    "package.json"
+  ],
   "engines": {
     "node": ">=18.0.0",
     "npm": ">=10.0.0"
   },
   "tsup": {
-    "entry": ["src/index.ts"],
+    "entry": [
+      "src/index.ts"
+    ],
     "splitting": false,
     "sourcemap": true,
-    "format": ["cjs", "esm"],
+    "format": [
+      "cjs",
+      "esm"
+    ],
     "clean": true
   },
   "commitlint": {
-    "extends": ["@commitlint/config-conventional"],
+    "extends": [
+      "@commitlint/config-conventional"
+    ],
     "helpUrl": "https://github.com/conventional-changelog/commitlint/#what-is-commitlint"
   },
   "release": {
@@ -52,7 +67,10 @@
       [
         "@semantic-release/git",
         {
-          "assets": ["CHANGELOG.md", "dist/**"],
+          "assets": [
+            "CHANGELOG.md",
+            "dist/**"
+          ],
           "message": "chore(release): set `package.json` to ${nextRelease.version} [skip ci]\n\n${nextRelease.notes}"
         }
       ]
@@ -71,7 +89,7 @@
     "check-exports": "attw --pack ."
   },
   "devDependencies": {
-    "@arethetypeswrong/cli": "^0.16.4",
+    "@arethetypeswrong/cli": "^0.17.3",
     "@biomejs/biome": "^1.9.2",
     "@commitlint/cli": "^19.5.0",
     "@commitlint/config-conventional": "^19.5.0",
@@ -80,7 +98,7 @@
     "@types/object-path": "^0.11.1",
     "debug": "^4.4.0",
     "dotenv": "^16.4.5",
-    "dotenv-cli": "^7.1.0",
+    "dotenv-cli": "^8.0.0",
     "husky": "^9.1.6",
     "jest": "^29.7.0",
     "jest-extended": "^4.0.2",
@@ -97,6 +115,6 @@
   "peerDependencies": {
     "@google-cloud/translate": "^8.0.2",
     "deepl-node": "^1.15.0",
-    "mongoose": "^6.6.6"
+    "mongoose": "^8.9.5"
   }
 }
