@@ -180,12 +180,12 @@ export async function generateAutoTranslation(
   from: string,
   to: string,
   source: Map<string, string>,
-  translator: TranslatorFunction
+  translatorFunction: TranslatorFunction
 ): Promise<Map<string, string>> {
   const translationsResult = new Map();
   try {
     // Get translations from provider
-    const autoTranslations = await translator({
+    const autoTranslations = await translatorFunction({
       from,
       to,
       text: Array.from(source.values())
@@ -193,7 +193,7 @@ export async function generateAutoTranslation(
 
     Array.from(source.keys()).forEach((key, index) => translationsResult.set(key, autoTranslations[index]));
   } catch (error) {
-    console.log(`Translation failed form ${from} to ${to}`);
+    console.error(`Translation failed form ${from} to ${to}`);
   }
   return translationsResult;
 }

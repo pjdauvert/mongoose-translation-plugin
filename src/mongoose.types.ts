@@ -26,9 +26,14 @@ export interface TranslatablePayload {
 export type TranslatorFunction = (translationParams: TranslatablePayload) => Promise<string[]>;
 export type SanitizerFunction = (value: string) => string;
 
+export interface TranslationProvider {
+  getTranslations: TranslatorFunction;
+}
+
 // plugin options
 export interface TranslationOptions {
-  translator: TranslatorFunction;
+  provider?: TranslationProvider;
+  translator?: TranslatorFunction;
   defaultLanguage?: string;
   sanitizer?: SanitizerFunction;
   languageField?: string;
