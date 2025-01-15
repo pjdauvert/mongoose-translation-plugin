@@ -2,20 +2,39 @@ import 'jest-extended';
 
 import mongoose from 'mongoose';
 
-import type { TranslatableDocument, TranslatablePayload, TranslatedPlainObject } from '../mongoose.types';
+import type { TranslatableDocument, TranslatedPlainObject, TranslationProvider, TranslatorFunction } from '../mongoose.types';
 import { translationPlugin } from '../plugin';
 import { type MongoMemoryServerHelper, clearDatabase, closeDatabase, connect } from './db.setup';
 const Schema = mongoose.Schema;
 
-// This translator mock replaces an interface of Google Translate.
+// TranslationFunction is a function that takes a payload and returns a promise that resolves to an array of strings
+// The payload is an object with the following properties:
+// - text: string[]
+// - from: string
+// - to: string
+// The plugin option `translatorFunction` is now deprecated in favor of `provider`
+// Though `translatorFunction` is still supported for compatibility reasons, it is recommended to use `provider` with a `TranslationProvider` instance instead.
+
+// This translation provider mock replaces an implemetation of a provider like Google Translate or Deepl.
 // for test purpose, and checks, translated strings will simply be
 // prefixed by the languages from and to
-const translatorMock = async ({ text, from, to }: TranslatablePayload): Promise<string[]> => text.map((native) => `${from}-${to}-${native}`);
+
+const mockTranslationFunction: TranslatorFunction = jest.fn(async (payload) => {
+  return Promise.resolve(payload.text.map((text) => `${payload.from}-${payload.to}-${text}`));
+});
+
+class TestTranslator implements TranslationProvider {
+  public getTranslations: TranslatorFunction = mockTranslationFunction;
+}
 
 let memoryDB: MongoMemoryServerHelper;
 beforeAll(async () => {
   // const one = await initDatabase('mongoose-translation-plugin-1');
   memoryDB = await connect('mongoose-translation-plugin');
+});
+
+beforeEach(() => {
+  jest.clearAllMocks();
 });
 
 afterEach(async () => {
@@ -42,7 +61,7 @@ describe('Mongoose translation plugin test', () => {
       other: Number
     });
 
-    schema.plugin(translationPlugin, { translator: translatorMock });
+    schema.plugin(translationPlugin, { provider: new TestTranslator() });
 
     const SimpleModel = mongoose.model<ISimpleDocument>('SimpleModel', schema);
 
@@ -83,6 +102,26 @@ describe('Mongoose translation plugin test', () => {
     expect(entity.other).toBe(translation.other); //untouched other field
   });
 
+  it('Mongoose translation plugin - deprecated translatorFunction compatibility', async () => {
+    interface ISimple {
+      translatableStringField: string;
+    }
+    type ISimpleDocument = ISimple & TranslatableDocument<ISimple>;
+    const schema = new Schema({
+      translatableStringField: { type: String, required: true, translatable: true }
+    });
+    schema.plugin(translationPlugin, { translator: mockTranslationFunction });
+    const SimpleModel = mongoose.model<ISimpleDocument>('SimpleModel2', schema);
+    await SimpleModel.create({
+      language: 'en',
+      translatableStringField: 'This is a translatable field'
+    });
+    const entity = (await SimpleModel.findOne({})) as ISimpleDocument;
+    const translation = await entity.translate('fr');
+    expect(translation.translatableStringField).toBe(`en-fr-${entity.translatableStringField}`);
+    expect(mockTranslationFunction).toHaveBeenCalledOnce();
+  });
+
   it('Mongoose translation plugin - array model', async () => {
     interface IChild {
       child: string;
@@ -112,7 +151,7 @@ describe('Mongoose translation plugin test', () => {
     type IArrayDocument = IParent & TranslatableDocument<IParent>;
 
     schema.plugin(translationPlugin, {
-      translator: translatorMock
+      provider: new TestTranslator()
     });
 
     const ArrayModel = mongoose.model<IArrayDocument>('ArrayModel', schema);
@@ -190,8 +229,7 @@ describe('Mongoose translation plugin test', () => {
     });
 
     schema.plugin(translationPlugin, {
-      translator: translatorMock
-      // translator: getGoogleTranslations
+      provider: new TestTranslator()
     });
 
     type INestedDocument = IParent & TranslatableDocument<IParent>;
@@ -288,7 +326,7 @@ describe('Mongoose translation plugin test', () => {
       // translationField: 'traductions', //TODO : this option is not yet implemented
       defaultLanguage: 'fr',
       hashField: 'hash',
-      translator: translatorMock
+      provider: new TestTranslator()
     } as const;
 
     schema.plugin(translationPlugin, langOptions);
@@ -326,7 +364,7 @@ describe('Mongoose translation plugin test', () => {
     });
 
     schema.plugin(translationPlugin, {
-      translator: translatorMock
+      provider: new TestTranslator()
     });
 
     type ISimpleDocument = ISimpleValue & TranslatableDocument<ISimpleValue>;
@@ -364,7 +402,7 @@ describe('Mongoose translation plugin test', () => {
     const simpleHTMLTagStripper = (string: string): string => string.replace(/<[^>]+?>/gi, '');
 
     schema.plugin(translationPlugin, {
-      translator: translatorMock,
+      provider: new TestTranslator(),
       sanitizer: simpleHTMLTagStripper
     });
 
@@ -396,10 +434,10 @@ describe('Mongoose translation plugin test', () => {
       nested: [{ value: { type: String, translatable: true } }]
     });
 
-    const translator = jest.fn(translatorMock);
+    const provider = new TestTranslator();
 
     schema.plugin(translationPlugin, {
-      translator
+      provider
     });
 
     type IPersistenceDocument = ISimplePersistance & TranslatableDocument<ISimplePersistance>;
@@ -415,16 +453,16 @@ describe('Mongoose translation plugin test', () => {
     const entity = (await SimpleModelPersitance.findOne({})) as IPersistenceDocument;
     await entity.translate('fr');
     expect(entity.translation).toBeArrayOfSize(1); //entity is translated and translation is stored
-    expect(translator).toHaveBeenCalledOnce(); //translation function was called
+    expect(provider.getTranslations).toHaveBeenCalledOnce(); //translation function was called
     await entity.translate('fr');
-    expect(translator).toHaveBeenCalledOnce(); //translation function was not called
+    expect(provider.getTranslations).toHaveBeenCalledOnce(); //translation function was not called
 
     if (entity.nested[1]) {
       entity.nested[1].value += ' modified';
     }
     await entity.save();
     await entity.translate('fr');
-    expect(translator).toHaveBeenCalledTimes(2); //the translation service is called as hash has changed
+    expect(provider.getTranslations).toHaveBeenCalledTimes(2); //the translation service is called as hash has changed
     expect(entity.translation[0].nested?.[1]?.value).toEndWith('modified'); //the new translation is stored
 
     entity.translation[0].autoTranslated = false;
@@ -433,7 +471,7 @@ describe('Mongoose translation plugin test', () => {
     }
     await entity.save();
     const translation = await entity.translate('fr');
-    expect(translator).toHaveBeenCalledTimes(2); //translation function will not be called for this translation
+    expect(provider.getTranslations).toHaveBeenCalledTimes(2); //translation function will not be called for this translation
     expect(translation.nested[0]?.value).not.toEndWith('modified'); //the translation is not automatically fetched
   });
 });

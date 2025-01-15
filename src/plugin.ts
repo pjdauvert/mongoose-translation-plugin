@@ -6,16 +6,38 @@ import type {
   TranslatedPlainObject,
   TranslationDocument,
   TranslationDocumentMeta,
-  TranslationOptions
+  TranslationOptions,
+  TranslationProvider
 } from './mongoose.types';
 import { buildTranslationSchema, getTranslatablePaths } from './schema';
 import { applyTranslation, generateAutoTranslation, generateObjectFromPathMap, hashMapStringValues, mapTranslationSource } from './tools';
 
 export function translationPlugin<T>(schema: Schema, opts: TranslationOptions): void {
-  if (typeof opts.translator !== 'function') throw new Error('[Options]: translator must be a function: ({ text, from, to }) => [String]');
+  // check if provider is a Translation instance
+  if (opts.provider && !(opts.provider satisfies TranslationProvider)) throw new Error('[Options]: provider must be a TranslationProvider instance');
+  // check if provided translator option is a function
+  if (opts.translator && typeof opts.translator !== 'function') throw new Error('[Options]: translator must be a function: ({ text, from, to }) => [String]');
+  // check if provided sanitizer option is a function
+  if (opts.sanitizer && typeof opts.sanitizer !== 'function') throw new Error('[Options]: sanitizer must be a function: (String) => String');
+  // check if provided defaultLanguage option is a string
+  if (opts.defaultLanguage && typeof opts.defaultLanguage !== 'string') throw new Error('[Options]: defaultLanguage must be a string');
+  // check if provided languageField option is a string
+  if (opts.languageField && typeof opts.languageField !== 'string') throw new Error('[Options]: languageField must be a string');
+  // check if provided hashField option is a string
+  if (opts.hashField && typeof opts.hashField !== 'string') throw new Error('[Options]: hashField must be a string');
 
-  const options: Required<TranslationOptions> = {
-    translator: opts.translator,
+  // deprecate translator option
+  if (opts.translator) console.warn('[Options]: translator option is deprecated, use provider instead');
+
+  if (opts.provider && opts.translator) {
+    console.warn('[Options]: both provider and translator options are provided, translator option will be ignored');
+  }
+
+  const translator = opts.provider?.getTranslations || opts.translator;
+  if (!translator) throw new Error('[Options]: translator option is required');
+
+  const options: Required<Omit<TranslationOptions, 'provider'>> = {
+    translator,
     sanitizer: opts.sanitizer || ((value: string): string => value),
     defaultLanguage: opts.defaultLanguage || 'en',
     languageField: opts.languageField || 'language',
