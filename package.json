@@ -16,7 +16,7 @@
   },
   "files": ["dist", "package.json"],
   "engines": {
-    "node": ">=20.0.0",
+    "node": ">=18.0.0",
     "npm": ">=10.0.0"
   },
   "tsup": {
@@ -75,8 +75,10 @@
     "@biomejs/biome": "^1.9.2",
     "@commitlint/cli": "^19.5.0",
     "@commitlint/config-conventional": "^19.5.0",
+    "@types/debug": "^4.1.12",
     "@types/jest": "^29.5.13",
     "@types/object-path": "^0.11.1",
+    "debug": "^4.4.0",
     "dotenv": "^16.4.5",
     "dotenv-cli": "^7.1.0",
     "husky": "^9.1.6",
@@ -94,6 +96,7 @@
   },
   "peerDependencies": {
     "@google-cloud/translate": "^8.0.2",
+    "deepl-node": "^1.15.0",
     "mongoose": "^6.6.6"
   }
 }
