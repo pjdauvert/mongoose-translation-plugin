@@ -7,7 +7,11 @@ This document describes the added methods and attributes.
 
 The Translation Provider is an external API service that can translate a text from one language to another.
 
-The plugin requires a translator function to work, which accepts the following arguments:
+The plugin requires a translation provider to work. 
+
+The translation provider must be an implementation of the `TranslationProvider` abstract class.
+
+The `TranslationProvider` abstract class lets you implement your own translation provider, by implementing the `getTranslations` method as follows:
 
 ```typescript
 interface TranslatablePayload {
@@ -17,10 +21,21 @@ interface TranslatablePayload {
 }
 
 type TranslatorFunction = (translationParams: TranslatablePayload) => Promise<string[]>;
+
+class MyTranslator extends TranslationProvider {
+    public getTranslations: TranslatorFunction = async (payload) => {
+        // implement your own translation provider here
+    }
+}
+
 ```
 
+Note that for compatibility reasons, the plugin options allow to pass an attribute `translator`, with a function of type `TranslatorFunction`.
+This is deprecated and will be removed in the next major version.
+
 Ensure that the language codes are supported by the translation provider.
-An example with Google Translate is given in the repository [here](https://github.com/pjdauvert/mongoose-translation-plugin/tree/main/src/examples/google-translate.ts).
+An example with Google Translate is given in the repository [here](https://github.com/pjdauvert/mongoose-translation-plugin/tree/main/src/examples/google.translator.ts).
+Another example with DeepL is given [here](https://github.com/pjdauvert/mongoose-translation-plugin/tree/main/src/examples/deepl.translator.ts).
 
 ## Added Attributes
 
