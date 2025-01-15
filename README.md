@@ -37,10 +37,12 @@ The plugin is installed directly on the schema you want to translate. The Schema
 
 ### Prerequisites
 
-The plugin require a translation provider to be passed as an argument. The translation provider must be of type `TranslatorFunction`.
+The plugin require a translation provider to be passed as an argument. The translation provider must be an implementaiton of the `TranslationProvider` abstract class.
+
+The `TranslationProvider` abstract class lets you implement your own translation provider, by implementing the `getTranslations` method as follows:
 
 ```typescript
-(translationParams: TranslatablePayload) => Promise<string[]>;
+public getTranslations: TranslatorFunction = async ({text, from, to}: TranslatablePayload) => Promise<string[]>;
 ```
 
 The translation params (of type `TranslatablePayload`) are as follows:
@@ -51,7 +53,7 @@ The translation params (of type `TranslatablePayload`) are as follows:
 The function must preserve the order of the strings.
 A sanitizer function can be passed as an option to sanitize the text before sending it to the translation provider.
 
-An example with _Google Translate_ is given in the repository.
+An example with _Google Translate_ and _DeepL_ is given in the repository.
 
 ### Plugin Mongoose Schema
 
@@ -60,8 +62,15 @@ If the Schema contains nested objects, you can also define the nested object as 
 
 ```typescript
 import { Schema } from 'mongoose';
-import { type TranslatableDocument, translationPlugin } from 'mongoose-translation-plugin';
-import { translator } from './path/to/translator';
+import { type TranslatableDocument, type TranslatorFunction,translationPlugin, TranslationProvider } from 'mongoose-translation-plugin';
+
+
+class MyTranslator extends TranslationProvider {
+    public getTranslations: TranslatorFunction = async (payload) => {
+        // implement your own translation provider here
+    }
+}
+
 
 interface ISimple {
   translatableStringField: string;
@@ -77,7 +86,7 @@ const schema = new Schema({
   other: Number
 });
 
-schema.plugin(translationPlugin, { translator });
+schema.plugin(translationPlugin, { provider: TranslationProvider.getInstance(MyTranslator) });
 
 export const SimpleModel = mongoose.model<ISimpleDocument>('SimpleModel', schema);
 ```
@@ -99,7 +108,7 @@ The plugin accepts an options object as a second argument. The options are as fo
 - `languageField` (default: 'language'): The name of the attribute that contains the language of the document.
 - `hashField` (default: 'sourceHash'): The name of the attribute that contains the hash of the translatable fields.
 - ~~`translationField` (default: 'translation'): The name of the attribute that contains the translations.~~ (To be implemented)
-- `translator`: The translation provider function.
+- `translator`: The translation provider instance.
 - `sanitizer`: A function that will be called to sanitize the text before sending it to the translation provider.
 
 ### Translation
