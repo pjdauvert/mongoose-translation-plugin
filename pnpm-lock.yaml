@@ -36,6 +36,9 @@ importers:
       '@types/jest':
         specifier: ^29.5.14
         version: 29.5.14
+      '@types/node':
+        specifier: ^22.10.7
+        version: 22.10.7
       '@types/object-path':
         specifier: ^0.11.4
         version: 0.11.4
