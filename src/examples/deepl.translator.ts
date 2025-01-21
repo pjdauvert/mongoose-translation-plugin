@@ -16,7 +16,7 @@ export class DeepLTranslator implements TranslationProvider {
     if (!this.APIKey) {
       throw new Error('DEEPL_API_KEY is required in environment variables');
     }
-    debugLog(`Using DeepL Api Key: ${this.APIKey}`);
+    debugLog('DeepL Api Key is set');
 
     this.translator = new Translator(this.APIKey, {
       appInfo: {

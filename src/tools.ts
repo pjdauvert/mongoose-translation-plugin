@@ -190,10 +190,15 @@ export async function generateAutoTranslation(
       to,
       text: Array.from(source.values())
     });
-
-    Array.from(source.keys()).forEach((key, index) => translationsResult.set(key, autoTranslations[index]));
+    if (Array.isArray(autoTranslations)) {
+      // If the translation provider returns an array, we map the translations to the source keys
+      Array.from(source.keys()).forEach((key, index) => translationsResult.set(key, autoTranslations[index]));
+    } else {
+      // If the translation provider returns a single string, we map the translation to the source keys
+      throw new Error('Invalid response from translator');
+    }
   } catch (error) {
-    console.error(`Translation failed form ${from} to ${to}`);
+    throw new Error(`Translation failed form ${from} to ${to}: ${(error as Error).message}`);
   }
   return translationsResult;
 }

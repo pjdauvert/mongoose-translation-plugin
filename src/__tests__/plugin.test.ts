@@ -1,6 +1,6 @@
 import 'jest-extended';
 
-import mongoose from 'mongoose';
+import mongoose, { type Default__v } from 'mongoose';
 
 import type { TranslatableDocument, TranslatedPlainObject, TranslationProvider, TranslatorFunction } from '../mongoose.types';
 import { translationPlugin } from '../plugin';
@@ -53,7 +53,7 @@ describe('Mongoose translation plugin test', () => {
       other: number;
     }
 
-    type ISimpleDocument = ISimple & TranslatableDocument<ISimple>;
+    type ISimpleDocument = ISimple & Default__v<TranslatableDocument<ISimple>>;
 
     const schema = new Schema({
       translatableStringField: { type: String, required: true, translatable: true },
@@ -103,23 +103,92 @@ describe('Mongoose translation plugin test', () => {
   });
 
   it('Mongoose translation plugin - deprecated translatorFunction compatibility', async () => {
-    interface ISimple {
+    interface ISimple2 {
       translatableStringField: string;
     }
-    type ISimpleDocument = ISimple & TranslatableDocument<ISimple>;
+    type ISimpleDocument2 = ISimple2 & TranslatableDocument<ISimple2>;
     const schema = new Schema({
       translatableStringField: { type: String, required: true, translatable: true }
     });
     schema.plugin(translationPlugin, { translator: mockTranslationFunction });
-    const SimpleModel = mongoose.model<ISimpleDocument>('SimpleModel2', schema);
+    const SimpleModel2 = mongoose.model<ISimpleDocument2>('SimpleModel2', schema);
+    await SimpleModel2.create({
+      language: 'en',
+      translatableStringField: 'This is a translatable field'
+    });
+    const entity = (await SimpleModel2.findOne({})) as ISimpleDocument2;
+    const translation = await entity.translate('fr');
+    expect(translation.translatableStringField).toBe(`en-fr-${entity.translatableStringField}`);
+    expect(mockTranslationFunction).toHaveBeenCalledOnce();
+  });
+
+  it('Mongoose translation plugin - missing translator function', async () => {
+    const schema = new Schema({
+      translatableStringField: { type: String, required: true, translatable: true }
+    });
+
+    // Neither provider nor translator is provided
+    expect(() => schema.plugin(translationPlugin, {})).toThrow('[Options]: a translation option is required (provider or translator)');
+  });
+
+  it('Mongoose translation plugin - invalid translation payload', async () => {
+    interface ISimple3 {
+      translatableStringField: string;
+    }
+    type ISimpleDocument3 = ISimple3 & TranslatableDocument<ISimple3>;
+    const schema = new Schema({
+      translatableStringField: { type: String, required: true, translatable: true }
+    });
+
+    const invalidTranslator: TranslatorFunction = jest.fn(async () => {
+      // Return invalid response (not an array)
+      return Promise.resolve('invalid response' as unknown as string[]);
+    });
+
+    schema.plugin(translationPlugin, { translator: invalidTranslator });
+    const SimpleModel = mongoose.model<ISimpleDocument3>('SimpleModel3', schema);
+
     await SimpleModel.create({
       language: 'en',
       translatableStringField: 'This is a translatable field'
     });
-    const entity = (await SimpleModel.findOne({})) as ISimpleDocument;
+
+    const entity = (await SimpleModel.findOne({})) as ISimpleDocument3;
+
     const translation = await entity.translate('fr');
-    expect(translation.translatableStringField).toBe(`en-fr-${entity.translatableStringField}`);
-    expect(mockTranslationFunction).toHaveBeenCalledOnce();
+    // The translation provider failure should not alter the flow of the plugin
+    // the translation funtion returns the original value if it fails to translate.
+    await expect(translation.translatableStringField).toBe(entity.translatableStringField);
+  });
+
+  it('Mongoose translation plugin - translation failure', async () => {
+    interface ISimple4 {
+      translatableStringField: string;
+    }
+    type ISimpleDocument4 = ISimple4 & TranslatableDocument<ISimple4>;
+    const schema = new Schema({
+      translatableStringField: { type: String, required: true, translatable: true }
+    });
+
+    const failingTranslator: TranslatorFunction = jest.fn(async () => {
+      throw new Error('Translation service unavailable');
+    });
+
+    schema.plugin(translationPlugin, { translator: failingTranslator });
+    const SimpleModel4 = mongoose.model<ISimpleDocument4>('SimpleModel4', schema);
+
+    await SimpleModel4.create({
+      language: 'en',
+      translatableStringField: 'This is a translatable field'
+    });
+
+    const entity = (await SimpleModel4.findOne({})) as ISimpleDocument4;
+
+    const translation = await entity.translate('fr');
+
+    // The translation provider failure should not alter the flow of the plugin
+    // the translation funtion returns the original value if it fails to translate.
+    await expect(translation.translatableStringField).toBe(entity.translatableStringField);
   });
 
   it('Mongoose translation plugin - array model', async () => {
