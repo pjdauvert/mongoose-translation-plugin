@@ -54,9 +54,15 @@ export class DeepLTranslator implements TranslationProvider {
   public getTranslations: TranslatorFunction = async ({ text, from, to }) => {
     await this.validateSourceLanguage(from);
     await this.validateTargetLanguage(to);
-    debugLog(`Translating ${text} from ${from} to ${to}`);
-    const [translations] = await this.translator.translateText(text, from as SourceLanguageCode, to as TargetLanguageCode, this.textTranslationOptions);
-    debugLog(`Translations: ${JSON.stringify(translations, null, 2)}`);
-    return Array.isArray(translations) ? translations.map((t) => t.text) : [translations?.text || ''];
+    try {
+      debugLog(`Translating ${text} from ${from} to ${to}`);
+      const [translations] = await this.translator.translateText(text, from as SourceLanguageCode, to as TargetLanguageCode, this.textTranslationOptions);
+      debugLog(`Translations: ${JSON.stringify(translations, null, 2)}`);
+      return Array.isArray(translations) ? translations.map((t) => t.text) : [translations?.text || ''];
+    } catch (error) {
+      const err = error as Error;
+      debugLog(`Translation error: ${err.message}`);
+      throw new Error(`Failed to translate with DeepL: ${err.message}`);
+    }
   };
 }
