@@ -14,7 +14,7 @@ export class GoogleTranslator implements TranslationProvider {
     if (!this.APIKey) {
       throw new Error('GOOGLE_API_KEY is required in environment variables');
     }
-    debugLog(`Using Google Api Key: ${this.APIKey}`);
+    debugLog('Google Api Key is set');
     this.translator = new v2.Translate({ key: this.APIKey });
   }
 
@@ -34,12 +34,18 @@ export class GoogleTranslator implements TranslationProvider {
     await this.validateLanguage(from);
     await this.validateLanguage(to);
     debugLog(`Translating ${text} from ${from} to ${to}`);
-    const [translations, metadata] = await this.translator.translate(text, {
-      from,
-      to,
-      model: 'nmt'
-    });
-    debugLog(`Translations: ${translations}, Metadata: ${metadata}`);
-    return Array.isArray(translations) ? translations : [translations];
+    try {
+      const [translations, metadata] = await this.translator.translate(text, {
+        from,
+        to,
+        model: 'nmt'
+      });
+      debugLog(`Translations: ${translations}, Metadata: ${metadata}`);
+      return Array.isArray(translations) ? translations : [translations];
+    } catch (error) {
+      const err = error as Error;
+      debugLog(`Translation error: ${err.message}`);
+      throw new Error(`Failed to translate text with Google Translate: ${err.message}`);
+    }
   };
 }

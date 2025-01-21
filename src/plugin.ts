@@ -6,15 +6,14 @@ import type {
   TranslatedPlainObject,
   TranslationDocument,
   TranslationDocumentMeta,
-  TranslationOptions,
-  TranslationProvider
+  TranslationOptions
 } from './mongoose.types';
 import { buildTranslationSchema, getTranslatablePaths } from './schema';
 import { applyTranslation, generateAutoTranslation, generateObjectFromPathMap, hashMapStringValues, mapTranslationSource } from './tools';
 
 export function translationPlugin<T>(schema: Schema, opts: TranslationOptions): void {
   // check if provider is a Translation instance
-  if (opts.provider && !(opts.provider satisfies TranslationProvider)) throw new Error('[Options]: provider must be a TranslationProvider instance');
+  if (opts.provider && typeof opts.provider.getTranslations !== 'function') throw new Error('[Options]: provider must implement getTranslations method');
   // check if provided translator option is a function
   if (opts.translator && typeof opts.translator !== 'function') throw new Error('[Options]: translator must be a function: ({ text, from, to }) => [String]');
   // check if provided sanitizer option is a function
@@ -34,7 +33,7 @@ export function translationPlugin<T>(schema: Schema, opts: TranslationOptions): 
   }
 
   const translator = opts.provider?.getTranslations || opts.translator;
-  if (!translator) throw new Error('[Options]: translator option is required');
+  if (!translator) throw new Error('[Options]: a translation option is required (provider or translator)');
 
   const options: Required<Omit<TranslationOptions, 'provider'>> = {
     translator,
