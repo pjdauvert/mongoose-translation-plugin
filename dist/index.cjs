@@ -28,11 +28,11 @@ var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__ge
 var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
 
 // src/index.ts
-var src_exports = {};
-__export(src_exports, {
+var index_exports = {};
+__export(index_exports, {
   translationPlugin: () => translationPlugin
 });
-module.exports = __toCommonJS(src_exports);
+module.exports = __toCommonJS(index_exports);
 
 // src/plugin.ts
 var import_mongoose = require("mongoose");
@@ -181,17 +181,21 @@ function applyTranslation(document, translation) {
 function hashMapStringValues(aMap) {
   return (0, import_node_crypto.createHash)("md5").update(Array.from(aMap.values()).join("")).digest("base64");
 }
-async function generateAutoTranslation(from, to, source, translator) {
+async function generateAutoTranslation(from, to, source, translatorFunction) {
   const translationsResult = /* @__PURE__ */ new Map();
   try {
-    const autoTranslations = await translator({
+    const autoTranslations = await translatorFunction({
       from,
       to,
       text: Array.from(source.values())
     });
-    Array.from(source.keys()).forEach((key, index) => translationsResult.set(key, autoTranslations[index]));
+    if (Array.isArray(autoTranslations)) {
+      Array.from(source.keys()).forEach((key, index) => translationsResult.set(key, autoTranslations[index]));
+    } else {
+      throw new Error("Invalid response from translator");
+    }
   } catch (error) {
-    console.log(`Translation failed form ${from} to ${to}`);
+    throw new Error(`Translation failed form ${from} to ${to}: ${error.message}`);
   }
   return translationsResult;
 }
@@ -207,9 +211,20 @@ function mapTranslationSource(entity, paths, sanitizer) {
 
 // src/plugin.ts
 function translationPlugin(schema, opts) {
-  if (typeof opts.translator !== "function") throw new Error("[Options]: translator must be a function: ({ text, from, to }) => [String]");
+  if (opts.provider && typeof opts.provider.getTranslations !== "function") throw new Error("[Options]: provider must implement getTranslations method");
+  if (opts.translator && typeof opts.translator !== "function") throw new Error("[Options]: translator must be a function: ({ text, from, to }) => [String]");
+  if (opts.sanitizer && typeof opts.sanitizer !== "function") throw new Error("[Options]: sanitizer must be a function: (String) => String");
+  if (opts.defaultLanguage && typeof opts.defaultLanguage !== "string") throw new Error("[Options]: defaultLanguage must be a string");
+  if (opts.languageField && typeof opts.languageField !== "string") throw new Error("[Options]: languageField must be a string");
+  if (opts.hashField && typeof opts.hashField !== "string") throw new Error("[Options]: hashField must be a string");
+  if (opts.translator) console.warn("[Options]: translator option is deprecated, use provider instead");
+  if (opts.provider && opts.translator) {
+    console.warn("[Options]: both provider and translator options are provided, translator option will be ignored");
+  }
+  const translator = opts.provider?.getTranslations || opts.translator;
+  if (!translator) throw new Error("[Options]: a translation option is required (provider or translator)");
   const options = {
-    translator: opts.translator,
+    translator,
     sanitizer: opts.sanitizer || ((value) => value),
     defaultLanguage: opts.defaultLanguage || "en",
     languageField: opts.languageField || "language",

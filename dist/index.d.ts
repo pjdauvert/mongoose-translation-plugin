@@ -19,8 +19,12 @@ interface TranslatablePayload {
 }
 type TranslatorFunction = (translationParams: TranslatablePayload) => Promise<string[]>;
 type SanitizerFunction = (value: string) => string;
+interface TranslationProvider {
+    getTranslations: TranslatorFunction;
+}
 interface TranslationOptions {
-    translator: TranslatorFunction;
+    provider?: TranslationProvider;
+    translator?: TranslatorFunction;
     defaultLanguage?: string;
     sanitizer?: SanitizerFunction;
     languageField?: string;
@@ -51,4 +55,4 @@ type TranslatableDocument<T, O = {
 
 declare function translationPlugin<T>(schema: Schema, opts: TranslationOptions): void;
 
-export { type NestedTranslation, type SanitizerFunction, type TranslatableDocument, type TranslatablePayload, type TranslatedDocumentMeta, type TranslatedPlainObject, type TranslationDocument, type TranslationDocumentMeta, type TranslationOptions, type TranslatorFunction, translationPlugin };
+export { type NestedTranslation, type SanitizerFunction, type TranslatableDocument, type TranslatablePayload, type TranslatedDocumentMeta, type TranslatedPlainObject, type TranslationDocument, type TranslationDocumentMeta, type TranslationOptions, type TranslationProvider, type TranslatorFunction, translationPlugin };

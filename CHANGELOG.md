@@ -1,3 +1,15 @@
+# [1.1.0](https://github.com/pjdauvert/mongoose-translation-plugin/compare/v1.0.3...v1.1.0) (2025-01-22)
+
+
+### Bug Fixes
+
+* **deepl.translator:** improve error handling ([3d8ebdb](https://github.com/pjdauvert/mongoose-translation-plugin/commit/3d8ebdb8011dcc649ba2dc39151d9acd7a450d2b))
+
+
+### Features
+
+* **provider:** enhance translation plugin and update dependencies ([6cf1482](https://github.com/pjdauvert/mongoose-translation-plugin/commit/6cf148283a90ce9a7fdaa9fd71cd02132bb449d6))
+
 ## [1.0.3](https://github.com/pjdauvert/mongoose-translation-plugin/compare/v1.0.2...v1.0.3) (2024-09-30)
 
 
