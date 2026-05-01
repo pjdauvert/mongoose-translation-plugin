@@ -26,19 +26,18 @@ export function translationPlugin<T>(schema: Schema, opts: TranslationOptions): 
   const translator = opts.provider?.getTranslations || opts.translator;
   if (!translator) throw new Error('[Options]: a translation option is required (provider or translator)');
 
-  const options: Required<Omit<TranslationOptions, 'provider'>> & { timestampField: 'sourceUpdatedAt' } = {
+  const options: Required<Omit<TranslationOptions, 'provider'>> = {
     translator,
     sanitizer: opts.sanitizer || ((value: string): string => value),
     defaultLanguage: opts.defaultLanguage || 'en',
-    languageField: opts.languageField || 'language',
-    timestampField: 'sourceUpdatedAt'
+    languageField: opts.languageField || 'language'
   };
 
   const pathsToTranslate = getTranslatablePaths(schema);
 
   // add the timestamp field (Date) and language field to the schema
   const schemaFields: SchemaDefinition = {
-    [options.timestampField]: { type: Date },
+    sourceUpdatedAt: { type: Date },
     [options.languageField]: { type: String, default: options.defaultLanguage }
   };
 
@@ -65,15 +64,19 @@ export function translationPlugin<T>(schema: Schema, opts: TranslationOptions): 
       isNew ||
       pathsToTranslate.some((path) => {
         if (this.isModified(path)) return true;
-        // For array sub-paths, also check parent segments
+        // For array sub-paths, check parent segments that are array fields in the schema
         const segments = path.split('.');
-        return segments.some((_, i) => i > 0 && this.isModified(segments.slice(0, i).join('.')));
+        return segments.some((_, i) => {
+          if (i === 0) return false;
+          const parent = segments.slice(0, i).join('.');
+          return schema.path(parent)?.instance === 'Array' && this.isModified(parent);
+        });
       });
     if (hasTranslatableChange) {
       // Ensure the timestamp is strictly monotonic: never write a value <= the existing one
-      const existing = this.get(options.timestampField) as Date | undefined;
+      const existing = this.get('sourceUpdatedAt') as Date | undefined;
       const now = new Date();
-      this.set(options.timestampField, existing && now <= existing ? new Date(existing.getTime() + 1) : now);
+      this.set('sourceUpdatedAt', existing && now <= existing ? new Date(existing.getTime() + 1) : now);
     }
   });
 
@@ -112,7 +115,7 @@ export function translationPlugin<T>(schema: Schema, opts: TranslationOptions): 
     });
     if (hasTranslatableChange) {
       // Merge into $set rather than replacing the whole update object
-      update.$set = Object.assign({}, $set, { [options.timestampField]: new Date() });
+      update.$set = Object.assign({}, $set, { sourceUpdatedAt: new Date() });
     }
   }
 
@@ -168,7 +171,7 @@ export function translationPlugin<T>(schema: Schema, opts: TranslationOptions): 
    * Returns the current value of the source timestamp field.
    */
   schema.methods.getSourceUpdatedAt = function getSourceUpdatedAt(): Date {
-    return this.get(options.timestampField) as Date;
+    return this.get('sourceUpdatedAt') as Date;
   };
 
   schema.methods.getTranslation = async function getTranslation(locale: string): Promise<TranslationDocument<T>> {
@@ -180,7 +183,7 @@ export function translationPlugin<T>(schema: Schema, opts: TranslationOptions): 
     // A (re-)translation is needed when:
     // - no translation exists yet, OR
     // - the translation was auto-generated AND the source has been updated after the translation was last generated
-    const rawTranslationTimestamp = (translation as Record<string, unknown>)?.[options.timestampField] as Date | string | undefined;
+    const rawTranslationTimestamp = (translation as Record<string, unknown>)?.sourceUpdatedAt as Date | string | undefined;
     const translationTimestamp = rawTranslationTimestamp ? new Date(rawTranslationTimestamp as string | Date) : null;
     const isStale = !translationTimestamp || sourceUpdatedAt.getTime() > translationTimestamp.getTime();
 
@@ -191,7 +194,7 @@ export function translationPlugin<T>(schema: Schema, opts: TranslationOptions): 
         const translationsMap = await generateAutoTranslation(nativeLanguage, locale, translationSource, options.translator);
         const translationOverrides = generateObjectFromPathMap<Partial<T>>(translationsMap);
         const translationMeta = {
-          [options.timestampField]: sourceUpdatedAt,
+          sourceUpdatedAt,
           [options.languageField]: locale
         };
         translation = { ...translationMeta, ...translationOverrides, autoTranslated: true } as unknown as TranslationDocument<T>;
@@ -218,7 +221,7 @@ export function translationPlugin<T>(schema: Schema, opts: TranslationOptions): 
     }
 
     const translationMeta = {
-      [options.timestampField]: (entityTranslation as Record<string, unknown>)?.[options.timestampField] ?? _this.get(options.timestampField),
+      sourceUpdatedAt: (entityTranslation as Record<string, unknown>)?.sourceUpdatedAt ?? _this.get('sourceUpdatedAt'),
       [options.languageField]: entityTranslation?.[options.languageField] || nativeLanguage,
       autoTranslated: entityTranslation?.autoTranslated || false
     };
