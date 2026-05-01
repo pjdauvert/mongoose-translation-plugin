@@ -1,7 +1,11 @@
 import type { Document } from 'mongoose';
 
+// Helper: extract languageField from options into a typed string property
+type TranslationDocumentOptions<O> = O extends { languageField?: infer L extends string } ? { [K in L]: string } : never;
+
 export type TranslationDocumentMeta = {
   autoTranslated: boolean;
+  sourceUpdatedAt: Date;
 } & TranslationDocumentOptions<TranslationOptions>;
 
 export interface TranslatedDocumentMeta {
@@ -37,27 +41,22 @@ export interface TranslationOptions {
   defaultLanguage?: string;
   sanitizer?: SanitizerFunction;
   languageField?: string;
-  hashField?: string;
 }
-
-// Helper type to generate new properties based on options
-type TranslationDocumentOptions<O> = O extends { languageField?: infer L extends string; hashField?: infer H extends string }
-  ? { [K in L | H]: string }
-  : never;
 
 // methods
 type BaseTranslatableDocument<T> = {
   getSupportedLanguages(): string[];
   getExistingTranslationForLocale(locale: string): TranslationDocument<T>;
   updateOrReplaceTranslation(translation: TranslationDocument<T>): Promise<void>;
-  generateSourceHash(): string;
+  getSourceUpdatedAt(): Date;
   translationSourceMap(): Map<string, string>;
   getTranslation(locale: string): Promise<TranslationDocument<T>>;
   translate(locale: string): Promise<TranslatedPlainObject<T>>;
   translation: [TranslationDocument<T>];
+  sourceUpdatedAt: Date;
 } & { [K in keyof T]: T[K] } & Document;
 
-export type TranslatableDocument<T, O = { languageField: 'language'; hashField: 'sourceHash' }> = BaseTranslatableDocument<T> & TranslationDocumentOptions<O>;
+export type TranslatableDocument<T, O = { languageField: 'language' }> = BaseTranslatableDocument<T> & TranslationDocumentOptions<O>;
 /**
 export type TranslatableModel<T extends Document> = Model<T>;
 

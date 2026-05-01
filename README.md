@@ -20,7 +20,9 @@ If a translation is not found for a given locale, the plugin allows you to retri
 
 The translations provided can be overridden by the user.
 
-The original document's translatable fields are hashed, in order to re-fetch the translation from the original document if any change occur in the native document's translatable attributes.
+A `sourceUpdatedAt` timestamp is set on the document whenever a translatable field changes.
+If the timestamp is newer than the one stored on an existing auto-translation, the plugin will
+automatically re-fetch that translation from the provider on the next `translate()` call.
 
 ## Installation 
 
@@ -92,8 +94,8 @@ export const SimpleModel = mongoose.model<ISimpleDocument>('SimpleModel', schema
 ```
 
 You're free to define your model how you like. Mongoose Translation Plugin will add :
-- a `language` attribute (can be renamed with options)
-- a `sourceHash` attribute (can be renamed with options)
+- a `language` attribute (can be renamed with the `languageField` option)
+- a `sourceUpdatedAt` attribute (Date, not configurable) tracking when translatable fields last changed
 - a `translation` attribute that contains all the translations
 - a `translate` method to retrieve the document in a specific language as plain object
 - a `updateOrReplaceTranslation` method to manually manage the translation of a locale.
@@ -105,11 +107,10 @@ See the [API Documentation](docs/api.md) section for more details.
 
 The plugin accepts an options object as a second argument. The options are as follows:
 
-- `languageField` (default: 'language'): The name of the attribute that contains the language of the document.
-- `hashField` (default: 'sourceHash'): The name of the attribute that contains the hash of the translatable fields.
-- ~~`translationField` (default: 'translation'): The name of the attribute that contains the translations.~~ (To be implemented)
-- `translator`: The translation provider instance.
-- `sanitizer`: A function that will be called to sanitize the text before sending it to the translation provider.
+- `languageField` (default: `'language'`): The name of the attribute that stores the document language.
+- ~~`translationField` (default: `'translation'`): The name of the attribute that contains the translations.~~ (To be implemented)
+- `translator`: The translation function (deprecated — use `provider` instead).
+- `sanitizer`: A function called to sanitize text before sending it to the translation provider.
 
 ### Translation
 
@@ -129,7 +130,7 @@ The `documentTranslation` is a plain object as follows:
   "nativeLanguage": "en",
   "supportedLanguages": ["en", "fr"],
   "language": "fr",
-  "sourceHash": "<The hash of all the translatable fields>",
+  "sourceUpdatedAt": "<ISO timestamp of the last translatable-field change>",
   "autoTranslated": true,
   "translatableStringField": "Bonjour",
   "nonTranslatableStringField": "World",
