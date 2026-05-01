@@ -4,7 +4,8 @@ import mongoose, { type Default__v } from 'mongoose';
 
 import type { TranslatableDocument, TranslatedPlainObject, TranslationProvider, TranslatorFunction } from '../mongoose.types';
 import { translationPlugin } from '../plugin';
-import { type MongoMemoryServerHelper, clearDatabase, closeDatabase, connect } from './db.setup';
+import { clearDatabase, closeDatabase, connect, type MongoMemoryServerHelper } from './db.setup';
+
 const Schema = mongoose.Schema;
 
 // TranslationFunction is a function that takes a payload and returns a promise that resolves to an array of strings
@@ -90,7 +91,7 @@ describe('Mongoose translation plugin test', () => {
 
     // check that entity now has one translation
     expect(entity.translation).toBeArrayOfSize(1); //new translation object created
-    expect(entity.getSupportedLanguages()).toContainAllValues(['en', 'fr']); //supported language added
+    expect(entity.getSupportedLanguages()).toIncludeAllMembers(['en', 'fr']); //supported language added
     expect(entity.__v).toBe(1); //document version was altered;
     expect(translation.nativeLanguage).toBe('en'); //native language accessor set
     expect(translation.translatableStringField).toBe(`en-fr-${entity.translatableStringField}`); //translation mock succeeded

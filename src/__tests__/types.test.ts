@@ -17,8 +17,11 @@ describe('translatable document', () => {
 
     const obj = {} as MyObjectTranslatable;
 
+    // biome-ignore lint/correctness/noUnusedVariables: type-level assertions
     type testInitialProp = Expect<(typeof obj)['count'] extends number ? true : false>;
+    // biome-ignore lint/correctness/noUnusedVariables: type-level assertions
     type helloIsWorld = Expect<Equal<MyObjectTranslatable['hello'], 'world'>>;
+    // biome-ignore lint/correctness/noUnusedVariables: type-level assertions
     type countIsNumber = Expect<Equal<MyObjectTranslatable['count'], number>>;
 
     expect(true).toBeTruthy();
