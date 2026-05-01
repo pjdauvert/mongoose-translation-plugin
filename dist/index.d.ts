@@ -1,7 +1,13 @@
 import { Document, Schema } from 'mongoose';
 
+type TranslationDocumentOptions<O> = O extends {
+    languageField?: infer L extends string;
+} ? {
+    [K in L]: string;
+} : never;
 type TranslationDocumentMeta = {
     autoTranslated: boolean;
+    sourceUpdatedAt: Date;
 } & TranslationDocumentOptions<TranslationOptions>;
 interface TranslatedDocumentMeta {
     nativeLanguage: string;
@@ -28,29 +34,22 @@ interface TranslationOptions {
     defaultLanguage?: string;
     sanitizer?: SanitizerFunction;
     languageField?: string;
-    hashField?: string;
 }
-type TranslationDocumentOptions<O> = O extends {
-    languageField?: infer L extends string;
-    hashField?: infer H extends string;
-} ? {
-    [K in L | H]: string;
-} : never;
 type BaseTranslatableDocument<T> = {
     getSupportedLanguages(): string[];
     getExistingTranslationForLocale(locale: string): TranslationDocument<T>;
     updateOrReplaceTranslation(translation: TranslationDocument<T>): Promise<void>;
-    generateSourceHash(): string;
+    getSourceUpdatedAt(): Date;
     translationSourceMap(): Map<string, string>;
     getTranslation(locale: string): Promise<TranslationDocument<T>>;
     translate(locale: string): Promise<TranslatedPlainObject<T>>;
     translation: [TranslationDocument<T>];
+    sourceUpdatedAt: Date;
 } & {
     [K in keyof T]: T[K];
 } & Document;
 type TranslatableDocument<T, O = {
     languageField: 'language';
-    hashField: 'sourceHash';
 }> = BaseTranslatableDocument<T> & TranslationDocumentOptions<O>;
 
 declare function translationPlugin<T>(schema: Schema, opts: TranslationOptions): void;

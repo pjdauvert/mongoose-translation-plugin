@@ -1,3 +1,18 @@
+# [2.0.0](https://github.com/pjdauvert/mongoose-translation-plugin/compare/v1.1.0...v2.0.0) (2026-05-01)
+
+
+* feat!: replace sourceHash with sourceUpdatedAt timestamp ([#74](https://github.com/pjdauvert/mongoose-translation-plugin/issues/74)) ([2202f71](https://github.com/pjdauvert/mongoose-translation-plugin/commit/2202f710ddc79de34f4753014ff1a0a597831ecb))
+
+
+### BREAKING CHANGES
+
+* The sourceHash string field on both native documents and
+translation sub-documents is replaced by sourceUpdatedAt (Date). Existing
+documents that carry sourceHash but no sourceUpdatedAt will have their
+translations unconditionally re-fetched on the first translate() call
+after upgrading. The hashField plugin option is removed; the field name
+sourceUpdatedAt is fixed and not configurable.
+
 # [1.1.0](https://github.com/pjdauvert/mongoose-translation-plugin/compare/v1.0.3...v1.1.0) (2025-01-22)
 
 
