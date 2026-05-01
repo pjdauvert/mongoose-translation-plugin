@@ -102,8 +102,8 @@ const addSchemaForPath =
  * The final translation schema which will hold all translated values also has
  * the following properties:
  * 'autoTranslated', Boolean: indicates whether the actual translation is generated automatically by external provider
- * 'sourceHash', String: is the hash of the original content to compare updates in the original content and trigger
- * another automatic translation when changed.
+ * 'sourceUpdatedAt', Date: timestamp of the last translatable field update on the source document. Used to detect
+ * stale translations and trigger re-translation automatically when the source content changes.
  * 'language' (by default), holds the locale of the contents stored in the translation instance.
  * @param schema
  * @param schemaFields
