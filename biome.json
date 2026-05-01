@@ -1,8 +1,11 @@
 {
-  "organizeImports": { "enabled": true },
+  "assist": {
+    "actions": { "source": { "organizeImports": "on" } },
+    "includes": ["**", "!**/dist/**/*", "!**/coverage/**/*"]
+  },
 
   "formatter": {
-    "ignore": ["**/dist/**/*", "**/.pnpm-store/**/*", "**/coverage/**/*", "package.json"],
+    "includes": ["**", "!**/dist/**/*", "!**/.pnpm-store/**/*", "!**/coverage/**/*", "!**/package.json"],
     "enabled": true,
     "indentWidth": 2,
     "lineWidth": 160,
@@ -24,7 +27,7 @@
   },
 
   "linter": {
-    "ignore": ["**/dist/**/*", "**/coverage/**/*"],
+    "includes": ["**", "!**/dist/**/*", "!**/coverage/**/*"],
     "enabled": true,
     "rules": { "recommended": true }
   }

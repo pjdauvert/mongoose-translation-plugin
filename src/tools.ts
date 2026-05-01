@@ -5,7 +5,9 @@ import type { SanitizerFunction, TranslatorFunction } from './mongoose.types';
 
 function prefixMapKeys(map: Map<string, string>, prefix: string): Map<string, string> {
   const result = new Map();
-  map.forEach((value, key) => result.set(`${prefix}.${key}`, value));
+  map.forEach((value, key) => {
+    result.set(`${prefix}.${key}`, value);
+  });
   return result;
 }
 
@@ -87,7 +89,9 @@ export function mapEntityPathValues(path: string[], entity: Tree): Map<string, s
       translatableValue.forEach((subEntity, index) => {
         const mappedSubEntity = prefixMapKeys(mapEntityPathValues(subPath, <Tree>subEntity), index.toString());
         // copy values in the resulting supMap (flatten)
-        mappedSubEntity.forEach((value, key) => subMap.set(key, value));
+        mappedSubEntity.forEach((value, key) => {
+          subMap.set(key, value);
+        });
       });
     } else {
       subMap = mapEntityPathValues(subPath, <Tree>translatableValue);
@@ -116,7 +120,6 @@ export function applyTranslation<D extends Tree>(document: D, translation?: Part
 
   const localized: D = Object.assign({}, document);
 
-  // biome-ignore lint/complexity/noForEach: <explanation>
   Object.keys(translation).forEach((key) => {
     const override = translation[key];
     if (override && typeof override === 'string') {
@@ -192,7 +195,9 @@ export async function generateAutoTranslation(
     });
     if (Array.isArray(autoTranslations)) {
       // If the translation provider returns an array, we map the translations to the source keys
-      Array.from(source.keys()).forEach((key, index) => translationsResult.set(key, autoTranslations[index]));
+      Array.from(source.keys()).forEach((key, index) => {
+        translationsResult.set(key, autoTranslations[index]);
+      });
     } else {
       // If the translation provider returns a single string, we map the translation to the source keys
       throw new Error('Invalid response from translator');
@@ -212,7 +217,9 @@ export function mapTranslationSource(entity: Tree, paths: string[], sanitizer: S
   for (const path of paths) {
     const pathSegments = path.split('.');
     const pathValuesMap = mapEntityPathValues(pathSegments, entity);
-    pathValuesMap.forEach((value, key) => translationSourceMap.set(key, sanitizer(value)));
+    pathValuesMap.forEach((value, key) => {
+      translationSourceMap.set(key, sanitizer(value));
+    });
   }
   return translationSourceMap;
 }
