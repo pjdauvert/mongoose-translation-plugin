@@ -151,7 +151,8 @@ but it could be implemented in the future.
 
 ## Contribute
 
-Please respect the [Code of Conduct](CODE_OF_CONDUCT.md) to submit your improvement change requests. 
+See [CONTRIBUTING.md](CONTRIBUTING.md) for the branch model, commit conventions, PR checklist, and local setup instructions.
+Please respect the [Code of Conduct](CODE_OF_CONDUCT.md) in all interactions.
 
 ## License
 
