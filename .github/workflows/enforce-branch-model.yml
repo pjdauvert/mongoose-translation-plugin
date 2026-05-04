@@ -1,0 +1,13 @@
+name: Enforce branch model
+
+on:
+  pull_request:
+    branches: [main]
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - if: github.head_ref != 'beta'
+        run: |
+          echo "PRs to main must come from the beta branch."
+          exit 1
