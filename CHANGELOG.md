@@ -1,10 +1,36 @@
-## [1.0.2-beta.1](https://github.com/pjdauvert/mongoose-translation-plugin/compare/v1.0.1...v1.0.2-beta.1) (2024-09-30)
+# [2.0.0](https://github.com/pjdauvert/mongoose-translation-plugin/compare/v1.1.0...v2.0.0) (2026-05-01)
+
+
+* feat!: replace sourceHash with sourceUpdatedAt timestamp ([#74](https://github.com/pjdauvert/mongoose-translation-plugin/issues/74)) ([2202f71](https://github.com/pjdauvert/mongoose-translation-plugin/commit/2202f710ddc79de34f4753014ff1a0a597831ecb))
+
+
+### BREAKING CHANGES
+
+* The sourceHash string field on both native documents and
+translation sub-documents is replaced by sourceUpdatedAt (Date). Existing
+documents that carry sourceHash but no sourceUpdatedAt will have their
+translations unconditionally re-fetched on the first translate() call
+after upgrading. The hashField plugin option is removed; the field name
+sourceUpdatedAt is fixed and not configurable.
+
+# [1.1.0](https://github.com/pjdauvert/mongoose-translation-plugin/compare/v1.0.3...v1.1.0) (2025-01-22)
 
 
 ### Bug Fixes
 
-* ci credentials for release note ([#14](https://github.com/pjdauvert/mongoose-translation-plugin/issues/14)) ([3d7cdb9](https://github.com/pjdauvert/mongoose-translation-plugin/commit/3d7cdb9ee725a85f1015309f5b2db6b283372d8a))
-* **package.json:** use correct main and files values for publishing ([55cdb46](https://github.com/pjdauvert/mongoose-translation-plugin/commit/55cdb461725b9d392312f7d8cf07b451be526e21))
+* **deepl.translator:** improve error handling ([3d8ebdb](https://github.com/pjdauvert/mongoose-translation-plugin/commit/3d8ebdb8011dcc649ba2dc39151d9acd7a450d2b))
+
+
+### Features
+
+* **provider:** enhance translation plugin and update dependencies ([6cf1482](https://github.com/pjdauvert/mongoose-translation-plugin/commit/6cf148283a90ce9a7fdaa9fd71cd02132bb449d6))
+
+## [1.0.3](https://github.com/pjdauvert/mongoose-translation-plugin/compare/v1.0.2...v1.0.3) (2024-09-30)
+
+
+### Bug Fixes
+
+* **document:** typings and inferrence for base document ([fd51898](https://github.com/pjdauvert/mongoose-translation-plugin/commit/fd518988cffe67bbbf57caf5053774d7c21590b0))
 
 ## [1.0.2](https://github.com/pjdauvert/mongoose-translation-plugin/compare/v1.0.1...v1.0.2) (2024-09-20)
 

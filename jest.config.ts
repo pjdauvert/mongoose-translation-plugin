@@ -9,7 +9,7 @@ const config: Config = {
   testPathIgnorePatterns: ['/node_modules/', '/dist/', '/src/examples/'],
   collectCoverage: true,
   collectCoverageFrom: ['<rootDir>/src/**/*.ts'],
-  coveragePathIgnorePatterns: ['/node_modules/', '/dist/', '/src/examples/', '/src/__tests__/', 'index.ts']
+  coveragePathIgnorePatterns: ['/node_modules/', '/dist/', '/src/examples/', '/src/__tests__/', 'mongoose.types.ts', 'index.ts']
 };
 
 export default config;

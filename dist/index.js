@@ -61,11 +61,12 @@ function buildTranslationSchema(schema, schemaFields, pathsToTranslate) {
 }
 
 // src/tools.ts
-import { createHash } from "node:crypto";
 import objectPath from "object-path";
 function prefixMapKeys(map, prefix) {
   const result = /* @__PURE__ */ new Map();
-  map.forEach((value, key) => result.set(`${prefix}.${key}`, value));
+  map.forEach((value, key) => {
+    result.set(`${prefix}.${key}`, value);
+  });
   return result;
 }
 function notEmpty(value) {
@@ -97,7 +98,9 @@ function mapEntityPathValues(path, entity) {
     if (Array.isArray(translatableValue)) {
       translatableValue.forEach((subEntity, index) => {
         const mappedSubEntity = prefixMapKeys(mapEntityPathValues(subPath, subEntity), index.toString());
-        mappedSubEntity.forEach((value, key) => subMap.set(key, value));
+        mappedSubEntity.forEach((value, key) => {
+          subMap.set(key, value);
+        });
       });
     } else {
       subMap = mapEntityPathValues(subPath, translatableValue);
@@ -142,20 +145,23 @@ function applyTranslation(document, translation) {
   });
   return localized;
 }
-function hashMapStringValues(aMap) {
-  return createHash("md5").update(Array.from(aMap.values()).join("")).digest("base64");
-}
-async function generateAutoTranslation(from, to, source, translator) {
+async function generateAutoTranslation(from, to, source, translatorFunction) {
   const translationsResult = /* @__PURE__ */ new Map();
   try {
-    const autoTranslations = await translator({
+    const autoTranslations = await translatorFunction({
       from,
       to,
       text: Array.from(source.values())
     });
-    Array.from(source.keys()).forEach((key, index) => translationsResult.set(key, autoTranslations[index]));
+    if (Array.isArray(autoTranslations)) {
+      Array.from(source.keys()).forEach((key, index) => {
+        translationsResult.set(key, autoTranslations[index]);
+      });
+    } else {
+      throw new Error("Invalid response from translator");
+    }
   } catch (error) {
-    console.log(`Translation failed form ${from} to ${to}`);
+    throw new Error(`Translation failed form ${from} to ${to}: ${error.message}`);
   }
   return translationsResult;
 }
@@ -164,32 +170,99 @@ function mapTranslationSource(entity, paths, sanitizer) {
   for (const path of paths) {
     const pathSegments = path.split(".");
     const pathValuesMap = mapEntityPathValues(pathSegments, entity);
-    pathValuesMap.forEach((value, key) => translationSourceMap.set(key, sanitizer(value)));
+    pathValuesMap.forEach((value, key) => {
+      translationSourceMap.set(key, sanitizer(value));
+    });
   }
   return translationSourceMap;
 }
 
 // src/plugin.ts
 function translationPlugin(schema, opts) {
-  if (typeof opts.translator !== "function") throw new Error("[Options]: translator must be a function: ({ text, from, to }) => [String]");
+  if (opts.provider && typeof opts.provider.getTranslations !== "function") throw new Error("[Options]: provider must implement getTranslations method");
+  if (opts.translator && typeof opts.translator !== "function") throw new Error("[Options]: translator must be a function: ({ text, from, to }) => [String]");
+  if (opts.sanitizer && typeof opts.sanitizer !== "function") throw new Error("[Options]: sanitizer must be a function: (String) => String");
+  if (opts.defaultLanguage && typeof opts.defaultLanguage !== "string") throw new Error("[Options]: defaultLanguage must be a string");
+  if (opts.languageField && typeof opts.languageField !== "string") throw new Error("[Options]: languageField must be a string");
+  if (opts.translator) console.warn("[Options]: translator option is deprecated, use provider instead");
+  if (opts.provider && opts.translator) {
+    console.warn("[Options]: both provider and translator options are provided, translator option will be ignored");
+  }
+  const translator = opts.provider?.getTranslations || opts.translator;
+  if (!translator) throw new Error("[Options]: a translation option is required (provider or translator)");
   const options = {
-    translator: opts.translator,
+    translator,
     sanitizer: opts.sanitizer || ((value) => value),
     defaultLanguage: opts.defaultLanguage || "en",
-    languageField: opts.languageField || "language",
-    hashField: opts.hashField || "sourceHash"
+    languageField: opts.languageField || "language"
   };
   const pathsToTranslate = getTranslatablePaths(schema);
   const schemaFields = {
-    [options.hashField]: { type: String },
+    sourceUpdatedAt: { type: Date },
     [options.languageField]: { type: String, default: options.defaultLanguage }
   };
   schema.add(schemaFields);
   const translationSchemaDefinition = buildTranslationSchema(schema, schemaFields, pathsToTranslate);
   const translationSchema = new Schema(translationSchemaDefinition, { _id: false });
   schema.add({ translation: [translationSchema] });
-  schema.pre("save", function generateNativeHash() {
-    this.set(options.hashField, this.generateSourceHash());
+  const internalSaveSet = /* @__PURE__ */ new WeakSet();
+  schema.pre("save", function updateSourceTimestamp() {
+    if (internalSaveSet.has(this)) {
+      return;
+    }
+    const isNew = this.isNew;
+    const hasTranslatableChange = isNew || pathsToTranslate.some((path) => {
+      if (this.isModified(path)) return true;
+      const segments = path.split(".");
+      return segments.some((_, i) => {
+        if (i === 0) return false;
+        const parent = segments.slice(0, i).join(".");
+        return schema.path(parent)?.instance === "Array" && this.isModified(parent);
+      });
+    });
+    if (hasTranslatableChange) {
+      const existing = this.get("sourceUpdatedAt");
+      const now = /* @__PURE__ */ new Date();
+      this.set("sourceUpdatedAt", existing && now <= existing ? new Date(existing.getTime() + 1) : now);
+    }
+  });
+  function injectSourceTimestampInUpdate(update) {
+    const normalize = (path) => path.split(".").filter((segment) => !/^\d+$/.test(segment)).join(".");
+    const changedKeys = /* @__PURE__ */ new Set();
+    for (const key of Object.keys(update)) {
+      if (key.startsWith("$")) {
+        const operatorObj = update[key];
+        if (operatorObj && typeof operatorObj === "object") {
+          for (const path of Object.keys(operatorObj)) {
+            changedKeys.add(normalize(path));
+          }
+        }
+      } else {
+        changedKeys.add(normalize(key));
+      }
+    }
+    const $set = update.$set;
+    const hasTranslatableChange = pathsToTranslate.some((path) => {
+      const normalizedPath = normalize(path);
+      if (changedKeys.has(normalizedPath)) return true;
+      const segments = normalizedPath.split(".");
+      return segments.some((_, i) => i > 0 && changedKeys.has(segments.slice(0, i).join(".")));
+    });
+    if (hasTranslatableChange) {
+      update.$set = Object.assign({}, $set, { sourceUpdatedAt: /* @__PURE__ */ new Date() });
+    }
+  }
+  schema.pre("updateOne", function() {
+    const update = this.getUpdate();
+    if (update) injectSourceTimestampInUpdate(update);
+  });
+  schema.pre("updateMany", function() {
+    const update = this.getUpdate();
+    if (update) injectSourceTimestampInUpdate(update);
+  });
+  schema.pre("findOneAndUpdate", function() {
+    const update = this.getUpdate();
+    if (update) injectSourceTimestampInUpdate(update);
   });
   schema.methods.getSupportedLanguages = function getSupportedLanguages() {
     const supportedLanguages = [this.get(options.languageField)];
@@ -209,27 +282,34 @@ function translationPlugin(schema, opts) {
     const translations = this.get("translation").filter((t) => t[options.languageField] !== translation[options.languageField]);
     translations.push(translation);
     this.set("translation", translations);
-    await this.save();
+    internalSaveSet.add(this);
+    try {
+      await this.save();
+    } finally {
+      internalSaveSet.delete(this);
+    }
   };
   schema.methods.translationSourceMap = function translationSourceMap() {
     return mapTranslationSource(this.toObject(), pathsToTranslate, options.sanitizer);
   };
-  schema.methods.generateSourceHash = function generateSourceHash() {
-    const translationSource = this.translationSourceMap();
-    return hashMapStringValues(translationSource);
+  schema.methods.getSourceUpdatedAt = function getSourceUpdatedAt() {
+    return this.get("sourceUpdatedAt");
   };
   schema.methods.getTranslation = async function getTranslation(locale) {
     const _this = this;
     const translationSource = _this.translationSourceMap();
-    const translationSourceHash = _this.generateSourceHash();
+    const sourceUpdatedAt = _this.getSourceUpdatedAt();
     let translation = _this.getExistingTranslationForLocale(locale);
-    if (!translation || translation.autoTranslated && translation[options.hashField] !== translationSourceHash)
+    const rawTranslationTimestamp = translation?.sourceUpdatedAt;
+    const translationTimestamp = rawTranslationTimestamp ? new Date(rawTranslationTimestamp) : null;
+    const isStale = !translationTimestamp || sourceUpdatedAt.getTime() > translationTimestamp.getTime();
+    if (!translation || translation.autoTranslated && isStale)
       try {
         const nativeLanguage = this.get(options.languageField);
         const translationsMap = await generateAutoTranslation(nativeLanguage, locale, translationSource, options.translator);
         const translationOverrides = generateObjectFromPathMap(translationsMap);
         const translationMeta = {
-          [options.hashField]: _this.generateSourceHash(),
+          sourceUpdatedAt,
           [options.languageField]: locale
         };
         translation = { ...translationMeta, ...translationOverrides, autoTranslated: true };
@@ -247,7 +327,7 @@ function translationPlugin(schema, opts) {
       entityTranslation = await _this.getTranslation(locale);
     }
     const translationMeta = {
-      [options.hashField]: entityTranslation?.[options.hashField] || _this.get(options.hashField),
+      sourceUpdatedAt: entityTranslation?.sourceUpdatedAt ?? _this.get("sourceUpdatedAt"),
       [options.languageField]: entityTranslation?.[options.languageField] || nativeLanguage,
       autoTranslated: entityTranslation?.autoTranslated || false
     };

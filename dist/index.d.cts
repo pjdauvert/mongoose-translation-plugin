@@ -1,7 +1,13 @@
 import { Document, Schema } from 'mongoose';
 
+type TranslationDocumentOptions<O> = O extends {
+    languageField?: infer L extends string;
+} ? {
+    [K in L]: string;
+} : never;
 type TranslationDocumentMeta = {
     autoTranslated: boolean;
+    sourceUpdatedAt: Date;
 } & TranslationDocumentOptions<TranslationOptions>;
 interface TranslatedDocumentMeta {
     nativeLanguage: string;
@@ -19,31 +25,33 @@ interface TranslatablePayload {
 }
 type TranslatorFunction = (translationParams: TranslatablePayload) => Promise<string[]>;
 type SanitizerFunction = (value: string) => string;
+interface TranslationProvider {
+    getTranslations: TranslatorFunction;
+}
 interface TranslationOptions {
-    translator: TranslatorFunction;
+    provider?: TranslationProvider;
+    translator?: TranslatorFunction;
     defaultLanguage?: string;
     sanitizer?: SanitizerFunction;
     languageField?: string;
-    hashField?: string;
 }
-type TranslationDocumentOptions<O> = Required<O> extends {
-    languageField: infer L extends string;
-    hashField: infer H extends string;
-} ? {
-    [K in L | H]: string;
-} : never;
-interface BaseTranslatableDocument<T> extends Document {
+type BaseTranslatableDocument<T> = {
     getSupportedLanguages(): string[];
     getExistingTranslationForLocale(locale: string): TranslationDocument<T>;
     updateOrReplaceTranslation(translation: TranslationDocument<T>): Promise<void>;
-    generateSourceHash(): string;
+    getSourceUpdatedAt(): Date;
     translationSourceMap(): Map<string, string>;
     getTranslation(locale: string): Promise<TranslationDocument<T>>;
     translate(locale: string): Promise<TranslatedPlainObject<T>>;
     translation: [TranslationDocument<T>];
-}
-type TranslatableDocument<T> = BaseTranslatableDocument<T> & TranslationDocumentOptions<TranslationOptions>;
+    sourceUpdatedAt: Date;
+} & {
+    [K in keyof T]: T[K];
+} & Document;
+type TranslatableDocument<T, O = {
+    languageField: 'language';
+}> = BaseTranslatableDocument<T> & TranslationDocumentOptions<O>;
 
 declare function translationPlugin<T>(schema: Schema, opts: TranslationOptions): void;
 
-export { type NestedTranslation, type SanitizerFunction, type TranslatableDocument, type TranslatablePayload, type TranslatedDocumentMeta, type TranslatedPlainObject, type TranslationDocument, type TranslationDocumentMeta, type TranslationOptions, type TranslatorFunction, translationPlugin };
+export { type NestedTranslation, type SanitizerFunction, type TranslatableDocument, type TranslatablePayload, type TranslatedDocumentMeta, type TranslatedPlainObject, type TranslationDocument, type TranslationDocumentMeta, type TranslationOptions, type TranslationProvider, type TranslatorFunction, translationPlugin };

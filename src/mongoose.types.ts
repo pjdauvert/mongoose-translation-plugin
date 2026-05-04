@@ -1,7 +1,11 @@
 import type { Document } from 'mongoose';
 
+// Helper: extract languageField from options into a typed string property
+type TranslationDocumentOptions<O> = O extends { languageField?: infer L extends string } ? { [K in L]: string } : never;
+
 export type TranslationDocumentMeta = {
   autoTranslated: boolean;
+  sourceUpdatedAt: Date;
 } & TranslationDocumentOptions<TranslationOptions>;
 
 export interface TranslatedDocumentMeta {
@@ -26,36 +30,33 @@ export interface TranslatablePayload {
 export type TranslatorFunction = (translationParams: TranslatablePayload) => Promise<string[]>;
 export type SanitizerFunction = (value: string) => string;
 
+export interface TranslationProvider {
+  getTranslations: TranslatorFunction;
+}
+
 // plugin options
 export interface TranslationOptions {
-  translator: TranslatorFunction;
+  provider?: TranslationProvider;
+  translator?: TranslatorFunction;
   defaultLanguage?: string;
   sanitizer?: SanitizerFunction;
   languageField?: string;
-  hashField?: string;
 }
-
-// Helper type to generate new properties based on options
-type TranslationDocumentOptions<O> = Required<O> extends {
-  languageField: infer L extends string;
-  hashField: infer H extends string;
-}
-  ? { [K in L | H]: string }
-  : never;
 
 // methods
-interface BaseTranslatableDocument<T> extends Document {
+type BaseTranslatableDocument<T> = {
   getSupportedLanguages(): string[];
   getExistingTranslationForLocale(locale: string): TranslationDocument<T>;
   updateOrReplaceTranslation(translation: TranslationDocument<T>): Promise<void>;
-  generateSourceHash(): string;
+  getSourceUpdatedAt(): Date;
   translationSourceMap(): Map<string, string>;
   getTranslation(locale: string): Promise<TranslationDocument<T>>;
   translate(locale: string): Promise<TranslatedPlainObject<T>>;
   translation: [TranslationDocument<T>];
-}
+  sourceUpdatedAt: Date;
+} & { [K in keyof T]: T[K] } & Document;
 
-export type TranslatableDocument<T> = BaseTranslatableDocument<T> & TranslationDocumentOptions<TranslationOptions>;
+export type TranslatableDocument<T, O = { languageField: 'language' }> = BaseTranslatableDocument<T> & TranslationDocumentOptions<O>;
 /**
 export type TranslatableModel<T extends Document> = Model<T>;
 
