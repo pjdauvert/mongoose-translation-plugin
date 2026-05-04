@@ -11,6 +11,8 @@
     "resolveJsonModule": true,
     "moduleDetection": "force",
     "isolatedModules": true,
+    "rootDir": ".",
+    "ignoreDeprecations": "6.0",
 
     /* Strictness */
     "strict": true,
@@ -25,6 +27,9 @@
     "noEmit": true,
 
     /* If your code doesn't run in the DOM: */
-    "lib": ["es2022"]
+    "lib": ["es2022"],
+
+    /* Explicitly include test runner types */
+    "types": ["jest", "node"]
   }
 }
