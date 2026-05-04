@@ -203,7 +203,11 @@ export async function generateAutoTranslation(
       throw new Error('Invalid response from translator');
     }
   } catch (error) {
+<<<<<<< chore/sync-beta-with-main
     throw new Error(`Translation failed form ${from} to ${to}: ${(error as Error).message}`);
+=======
+    console.log(`Translation failed form ${from} to ${to}`);
+>>>>>>> beta
   }
   return translationsResult;
 }
